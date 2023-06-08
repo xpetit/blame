@@ -33,6 +33,6 @@ go run github.com/xpetit/blame@latest
 
 - Support
   - Multiple monitors
-  - Multiple workspaces
 - User-provided process parents list (name or PID)
 - Improve code (simplify & add comments)
+  - Compute memory usage more thoroughly (use `statm` or `smaps` instead of just `RssAnon`)

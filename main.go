@@ -42,19 +42,10 @@ func main() {
 
 	programs := map[int]string{}
 	{
-		var currentDesktopID string
-		for _, line := range lines("wmctrl", "-d") {
-			fields := strings.Fields(line)
-			if isCurrentDesktop := fields[1] == "*"; isCurrentDesktop {
-				currentDesktopID = fields[0]
-				break
-			}
-		}
-
 		for _, line := range lines("wmctrl", "-lpx") {
 			fields := strings.Fields(line)
 
-			if desktopID := fields[1]; desktopID != currentDesktopID {
+			if desktopID := fields[1]; desktopID == "-1" {
 				continue
 			}
 
