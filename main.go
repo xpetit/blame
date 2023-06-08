@@ -85,7 +85,7 @@ func main() {
 		for ; p.PPID != 0 && !HasKey(programs, p.PID); p = pids[p.PPID] {
 		}
 		if p != child && HasKey(programs, p.PID) {
-			p.RSS += child.RSS
+			p.Mem += child.Mem
 			p.CPUTime += child.CPUTime
 			children = append(children, child.PID)
 		}
@@ -98,8 +98,8 @@ func main() {
 	var totalPercent float64
 	percentages := map[int]float64{}
 	for pid, p := range pids {
-		totalMem += p.RSS
-		elapsed := uptime - (float64(p.StartTime) / system.Tick)
+		totalMem += p.Mem
+		elapsed := uptime - float64(p.StartTime)/system.Tick
 		percent := 100 * float64(p.CPUTime) / system.Tick / elapsed
 		totalPercent += percent
 		if percent > minCPU {
@@ -114,10 +114,10 @@ func main() {
 		}
 	}
 
-	byRSS := maps.Keys(pids)
-	byCPU := slices.Clone(byRSS)
+	byMem := maps.Keys(pids)
+	byCPU := slices.Clone(byMem)
 
-	slices.SortFunc(byRSS, func(a, b int) bool { return pids[a].RSS > pids[b].RSS })
+	slices.SortFunc(byMem, func(a, b int) bool { return pids[a].Mem > pids[b].Mem })
 	slices.SortFunc(byCPU, func(a, b int) bool { return percentages[a] > percentages[b] })
 
 	cpuWidth := len(fmt.Sprintf("%.1f", percentages[byCPU[0]]))
@@ -133,9 +133,10 @@ func main() {
 					cpuNameWidth, pids[pid].Name,
 				)
 			} else {
-				if pids[byRSS[i]].RSS <= minMem {
+				if pids[byMem[i]].Mem < minMem {
 					break
 				}
+				// padding with spaces
 				fmt.Printf("%*s %*s",
 					cpuWidth+1, "",
 					cpuNameWidth+len(`[            ] `), "",
@@ -144,12 +145,12 @@ func main() {
 		}
 		fmt.Print("   ")
 		{ // right column
-			if p := pids[byRSS[i]]; p.RSS <= minMem {
+			if p := pids[byMem[i]]; p.Mem < minMem {
 				fmt.Println()
 			} else {
-				barWidth := int(math.Round(12 * 8 * float64(p.RSS) / float64(totalMem)))
+				barWidth := int(math.Round(12 * 8 * float64(p.Mem) / float64(totalMem)))
 				fmt.Printf("%6s [%-*s] %s\n",
-					FormatByte(p.RSS),
+					FormatByte(p.Mem),
 					12, UnicodeBar(barWidth),
 					p.Name,
 				)

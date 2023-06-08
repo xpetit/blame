@@ -14,7 +14,7 @@ type Process struct {
 	Name      string
 	PID       int
 	PPID      int
-	RSS       int
+	Mem       int
 	CPUTime   int // in clock ticks, divide by Tick
 	StartTime int // in clock ticks, divide by Tick
 }
@@ -75,7 +75,7 @@ func Status() (processes []*Process, uptime float64) {
 			if _, rss, ok := strings.Cut(string(b), "RssAnon:\t"); ok {
 				rss = strings.TrimLeft(rss, " ")
 				rss, _, _ = strings.Cut(rss, " ")
-				p.RSS = atoi(rss) * 1024
+				p.Mem = atoi(rss) * 1024
 			}
 		}
 		processes = append(processes, &p)
