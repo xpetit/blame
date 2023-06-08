@@ -32,12 +32,7 @@ go run github.com/xpetit/blame@latest
 ### TODO
 
 - Support
-  - Wayland
   - Multiple monitors
   - Multiple workspaces
 - User-provided process parents list (name or PID)
 - Improve code (simplify & add comments)
-- Test
-  - Ubuntu
-  - Arch
-  - Alpine
