@@ -7,7 +7,7 @@ import (
 	"strconv"
 	"strings"
 
-	. "github.com/xpetit/x/v2"
+	. "github.com/xpetit/x/v4"
 )
 
 type Process struct {
@@ -19,19 +19,19 @@ type Process struct {
 	StartTime int // in clock ticks, divide by Tick
 }
 
-var Tick = float64(atoi(strings.TrimSpace(string(C2(exec.Command("getconf", "CLK_TCK").Output())))))
+var Tick = float64(atoi(strings.TrimSpace(string(Must(exec.Command("getconf", "CLK_TCK").Output())))))
 
-func atoi(s string) int { return C2(strconv.Atoi(s)) }
+func atoi(s string) int { return Must(strconv.Atoi(s)) }
 
 func Status() (processes []*Process, uptime float64) {
 	{
-		s, _, _ := strings.Cut(string(C2(os.ReadFile("/proc/uptime"))), " ")
-		uptime = C2(strconv.ParseFloat(s, 64))
+		s, _, _ := strings.Cut(string(Must(os.ReadFile("/proc/uptime"))), " ")
+		uptime = Must(strconv.ParseFloat(s, 64))
 	}
-	proc := C2(os.Open("/proc"))
+	proc := Must(os.Open("/proc"))
 	defer Closing(proc)
 
-	for _, dir := range C2(proc.Readdirnames(-1)) {
+	for _, dir := range Must(proc.Readdirnames(-1)) {
 		if dir[0] < '0' || dir[0] > '9' {
 			continue
 		}

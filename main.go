@@ -1,6 +1,7 @@
 package main
 
 import (
+	"cmp"
 	"flag"
 	"fmt"
 	"log"
@@ -8,20 +9,20 @@ import (
 	"os"
 	"os/exec"
 	"regexp"
+	"slices"
 	"strconv"
 	"strings"
 
 	"github.com/xpetit/blame/system"
-	. "github.com/xpetit/x/v2"
+	. "github.com/xpetit/x/v4"
 	"golang.org/x/exp/maps"
-	"golang.org/x/exp/slices"
 )
 
-func atoi(s string) int { return C2(strconv.Atoi(s)) }
+func atoi(s string) int { return Must(strconv.Atoi(s)) }
 
 func lines(command ...string) []string {
 	return strings.Split(
-		strings.TrimSpace(string(C2(Output(exec.Command(command[0], command[1:]...))))),
+		strings.TrimSpace(string(Must(Output(exec.Command(command[0], command[1:]...))))),
 		"\n",
 	)
 }
@@ -31,7 +32,7 @@ func main() {
 	var minMem int
 	{
 		const threshold = 0.001 // 0.1 %
-		meminfo := string(C2(os.ReadFile("/proc/meminfo")))
+		meminfo := string(Must(os.ReadFile("/proc/meminfo")))
 		totalMem := float64(1024 * atoi(regexp.MustCompile(`MemTotal: *(\d+) kB`).FindStringSubmatch(meminfo)[1]))
 		defaultMem := int(math.Round(totalMem * threshold))
 
@@ -73,9 +74,9 @@ func main() {
 	var children []int
 	for _, p := range processes {
 		child := p
-		for ; p.PPID != 0 && !HasKey(programs, p.PID); p = pids[p.PPID] {
+		for ; p.PPID != 0 && !Has(programs, p.PID); p = pids[p.PPID] {
 		}
-		if p != child && HasKey(programs, p.PID) {
+		if p != child && Has(programs, p.PID) {
 			p.Mem += child.Mem
 			p.CPUTime += child.CPUTime
 			children = append(children, child.PID)
@@ -108,8 +109,8 @@ func main() {
 	byMem := maps.Keys(pids)
 	byCPU := slices.Clone(byMem)
 
-	slices.SortFunc(byMem, func(a, b int) bool { return pids[a].Mem > pids[b].Mem })
-	slices.SortFunc(byCPU, func(a, b int) bool { return percentages[a] > percentages[b] })
+	slices.SortFunc(byMem, func(a, b int) int { return cmp.Compare(pids[b].Mem, pids[a].Mem) })
+	slices.SortFunc(byCPU, func(a, b int) int { return cmp.Compare(percentages[b], percentages[a]) })
 
 	cpuWidth := len(fmt.Sprintf("%.1f", percentages[byCPU[0]]))
 	for i := 0; i < len(pids); i++ {
